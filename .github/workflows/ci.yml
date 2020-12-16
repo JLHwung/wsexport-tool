@@ -53,6 +53,7 @@ jobs:
     - name: Install WSExport
       run: |
         composer install
+        ./bin/console doctrine:migrations:migrate --env=test --no-interaction
 
     - name: Test
       run: |

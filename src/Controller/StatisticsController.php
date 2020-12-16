@@ -2,8 +2,11 @@
 
 namespace App\Controller;
 
-use App\CreationLog;
+use App\Entity\GeneratedBook;
+use App\Repository\GeneratedBookRepository;
 use DateTime;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,14 +23,19 @@ class StatisticsController extends AbstractController {
 	/**
 	 * @Route("/statistics", name="statistics")
 	 * @Route("/stat.php")
+	 * @param Request $request
+	 * @param EntityManager $entityManager
+	 * @return \Symfony\Component\HttpFoundation\Response
 	 */
-	public function index( Request $request, CreationLog $creationLog ) {
+	public function index( Request $request, EntityManagerInterface $entityManager ) {
+		/** @var GeneratedBookRepository $generatedBookRepo */
+		$generatedBookRepo = $entityManager->getRepository( GeneratedBook::class );
 		$now = new DateTime();
 		$month = $request->get( 'month', $now->format( 'm' ) );
 		$year = $request->get( 'year', $now->format( 'Y' ) );
 
 		try {
-			$stat = $creationLog->getTypeAndLangStats( $month, $year );
+			$stat = $generatedBookRepo->getTypeAndLangStats( $month, $year );
 		} catch ( Exception $e ) {
 			$this->addFlash( 'danger', 'Internal error: ' . $e->getMessage() );
 			$stat = [];
@@ -60,7 +68,7 @@ class StatisticsController extends AbstractController {
 		ksort( $total );
 
 		return $this->render( 'statistics.html.twig', [
-			'recently_popular' => $creationLog->getRecentPopular(),
+			'recently_popular' => $generatedBookRepo->getRecentPopular(),
 			'month' => $month,
 			'year' => $year,
 			'val' => $val,
